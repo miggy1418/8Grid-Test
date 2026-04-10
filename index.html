@@ -101,7 +101,7 @@
 
 <script>
 /* ================= TIMER ================= */
-let timeLeft = 120;
+let timeLeft = 150;
 let timer = document.getElementById("timer");
 
 let countdown = setInterval(() => {
@@ -110,12 +110,12 @@ let countdown = setInterval(() => {
 
   if (timeLeft <= 0) {
     clearInterval(countdown);
-    alert("Time's up!");
+    alert("TiME's UP!");
   }
 }, 1000);
 
 /* ========== LETTER SET ========== */
-const baseWord = "congratulations";
+const baseWord = "congratulationsz";
 
 function getLetterCount(word) {
   let obj = {};
