@@ -170,19 +170,19 @@ function addWord() {
   }
 
   if (!isValidLetters(word)) {
-    alert("Invalid letters!");
+    alert("INVALID!");
     input.value = "";
     return;
   }
 
   if (!isRealWord(word)) {
-    alert("Not in dictionary!");
+    alert("INVALID!");
     input.value = "";
     return;
   }
 
   if (used.has(word)) {
-    alert("Already used!");
+    alert("ALREADY USED!");
     return;
   }
 
