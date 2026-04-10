@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+  <title>Word 8 Grid Experiment</title>
+ <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      min-height: 100dvh;
+
+      background-image: url('bg.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+
+      font-family: Arial, sans-serif;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .container {
+      text-align: center;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .container img {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+    }
+
+    .timer {
+      font-size: 24px;
+      margin: 20px 0;
+      color: #ccc;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 90%;
+      max-width: 300px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .words {
+      color: #ccc;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .words ul {
+      list-style: none;
+      padding: 0;
+      margin: 10px 0 0 0;
+
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+
+      color: #ccc;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <img src="8grid.PNG" alt="game board">
+
+    <div class="timer" id="timer">TIME</div>
+
+    <input type="text" id="wordInput" placeholder="Type a word">
+    <br><br>
+
+    <div class="words">
+      <strong>Words:</strong>
+      <ul id="list"></ul>
+    </div>
+  </div>
+
+<script>
+/* ================= TIMER ================= */
+let timeLeft = 120;
+let timer = document.getElementById("timer");
+
+let countdown = setInterval(() => {
+  timeLeft--;
+  timer.textContent = timeLeft;
+
+  if (timeLeft <= 0) {
+    clearInterval(countdown);
+    alert("Time's up!");
+  }
+}, 1000);
+
+/* ========== LETTER SET ========== */
+const baseWord = "congratulations";
+
+function getLetterCount(word) {
+  let obj = {};
+  for (let c of word) {
+    obj[c] = (obj[c] || 0) + 1;
+  }
+  return obj;
+}
+
+const baseCount = getLetterCount(baseWord);
+
+function isValidLetters(word) {
+  let temp = {...baseCount};
+
+  for (let c of word) {
+    if (!temp[c]) return false;
+    temp[c]--;
+  }
+  return true;
+}
+
+/* ========== OFFLINE DICTIONARY (sample-based) ========== */
+/* NOTE: You can expand this list with your 2465 words */
+const dictionary = [
+  "aal", "aas", "act", "aga", "ago", "ail", "ain", "air", "ais", "ait", "ala", "als", "alt", "ana", "ani", "ant", "arc", "ars", "art", "att", "can", "car", "cat", "cis", "cog", "col", "con", "coo", "cor", "cos", "cot", "cur", "cut", "gal", "gan", "gas", "gat", "gin", "git", "gnu", "goa", "goo", "gor", "got", "gul", "gut", "inn", "ins", "ion", "its", "lac", "lag", "lar", "las", "lat", "lin", "lis", "lit", "log", "loo", "lot", "lug", "nag", "nan", "nil", "nit", "nog", "noo", "nor", "nos", "not", "nun", "nus", "nut", "oar", "oat", "oca", "oil", "ons", "oot", "ora", "orc", "ors", "ort", "our", "out", "rag", "ran", "ras", "rat", "ria", "rig", "rin", "roc", "rot", "rug", "run", "rut", "sac", "sag", "sal", "sat", "sau", "sic", "sin", "sir", "sit", "sol", "son", "sot", "sou", "sri", "sun", "tag", "tan", "tao", "tar", "tas", "tat", "tau", "tic", "til", "tin", "tis", "tog", "ton", "too", "tor", "tot", "tug", "tui", "tun", "tut", "uns", "urn", "uta", "uts", "gun",
+  "aals", "acta", "acts", "agar", "agas", "agin", "agio", "agon", "ails", "ains", "airn", "airs", "airt", "aits", "alan", "alar", "alas", "alga", "alit", "also", "alto", "alts", "anal", "anas", "anga", "anil", "anis", "anna", "anoa", "anon", "ansa", "anta", "anti", "ants", "anus", "arco", "arcs", "aria", "aril", "arts", "asci", "aunt", "aura", "auto", "cain", "calo", "cans", "cant", "carl", "carn", "cars", "cart", "casa", "cast", "cats", "caul", "ciao", "cion", "cist", "clag", "clan", "clog", "clon", "clot", "coal", "coat", "cogs", "coil", "coin", "coir", "cola", "cols", "colt", "coni", "conn", "cons", "cool", "coos", "coot", "corn", "cost", "cots", "crag", "cris", "crus", "cult", "curl", "curn", "curs", "curt", "cuts", "gain", "gait", "gala", "gals", "gaol", "gars", "gast", "gats", "gaun", "gaur", "gilt", "gins", "girl", "girn", "giro", "girt", "gist", "gits", "glia", "glut", "gnar", "gnat", "gnus", "goal", "goas", "goat", "goon", "goos", "gout", "gran", "grat", "grin", "grit", "grot", "guan", "guar", "guls", "guns", "gust", "guts", "icon", "iglu", "inns", "inro", "into", "ions", "iota", "iron", "lacs", "lags", "laic", "lain", "lair", "lang", "lari", "lars", "last", "lati", "lats", "liar", "ling", "linn", "lino", "lins", "lint", "lion", "lira", "list", "lits", "litu", "loan", "loca", "loci", "loco", "logo", "logs", "loin", "long", "loon", "loos", "loot", "lorn", "lost", "lota", "loti", "lots", "lour", "lout", "lugs", "luna", "lung", "lunt", "lust", "naan", "nags", "nail", "nana", "nans", "naoi", "naos", "narc", "nils", "nits", "nogs", "noil", "noir", "nolo", "nona", "noon", "nori", "nota", "noun", "nous", "nuns", "nurl", "nuts", "oars", "oast", "oats", "ocas", "oils", "olio", "onto", "onus", "oots", "oral", "orca", "orcs", "orts", "osar", "otic", "otto", "ours", "oust", "outs", "raga", "ragi", "rags", "raia", "rail", "rain", "rang", "rani", "rant", "rato", "rats", "rial", "rias", "rigs", "ring", "rins", "riot", "roan", "rocs", "roil", "root", "rota", "roti", "rotl", "roto", "rots", "rout", "ruga", "rugs", "ruin", "rung", "runs", "runt", "rust", "ruts", "saga", "sago", "sail", "sain", "salt", "sang", "sari", "sati", "saul", "scan", "scar", "scat", "scot", "scut", "sial", "sign", "silo", "silt", "sing", "slat", "slit", "slog", "slot", "slug", "slur", "snag", "snit", "snog", "snot", "snug", "soar", "soil", "sola", "soli", "solo", "song", "soon", "soot", "sora", "sori", "sorn", "sort", "soul", "sour", "stag", "star", "stat", "stir", "stoa", "stun", "suit", "sung", "sunn", "sura", "taco", "tact", "tags", "tail", "tain", "tala", "talc", "tali", "tans", "taos", "tarn", "taro", "tars", "tart", "tats", "taus", "taut", "tics", "tils", "tilt", "ting", "tins", "tint", "tirl", "tiro", "toga", "togs", "toil", "toit", "tola", "tolu", "tong", "tons", "tool", "toon", "toot", "tora", "torc", "tori", "torn", "toro", "tors", "tort", "tost", "tots", "tour", "tout", "trig", "trio", "trot", "trug", "tsar", "tugs", "tuis", "tuna", "tung", "tuns", "turn", "tuts", "ulan", "ulna", "unai", "unci", "unco", "unit", "unto", "uric", "urns", "ursa", "utas", "asia",
+  "acari", "acing", "acorn", "actin", "actor", "again", "agars", "agios", "agist", "agons", "agora", "agria", "airns", "airts", "alang", "alans", "alant", "algas", "algin", "algor", "alias", "align", "alist", "aloin", "along", "altar", "altos", "ancon", "angas", "angst", "anils", "anion", "anlas", "annal", "annas", "annul", "anoas", "antas", "antic", "antis", "antra", "aorta", "arcus", "argal", "argil", "argol", "argon", "argot", "argus", "arias", "arils", "arson", "artal", "ascot", "astir", "atilt", "atlas", "atria", "attar", "attic", "aulic", "aunts", "aural", "auras", "auric", "auris", "autos", "cains", "cairn", "canal", "canna", "canon", "canso", "canst", "canto", "cants", "carat", "cargo", "carls", "carns", "carol", "carts", "cauls", "cigar", "cions", "clags", "clang", "clans", "claro", "clast", "cling", "clogs", "clons", "cloot", "clots", "clour", "clout", "clung", "coala", "coals", "coast", "coati", "coats", "cogon", "coign", "coils", "coins", "coirs", "colas", "colin", "colog", "colon", "color", "colts", "conga", "congo", "conin", "conns", "conto", "conus", "cools", "coots", "coral", "corgi", "coria", "corns", "cornu", "costa", "cotan", "cotta", "count", "court", "craal", "crags", "croon", "crust", "cuing", "culti", "cults", "curia", "curio", "curls", "curns", "curst", "cutin", "cutis", "gains", "gaits", "galas", "gaols", "garni", "gator", "gault", "gaunt", "gaurs", "giant", "gilts", "girns", "giron", "giros", "girts", "glair", "glias", "glint", "gloat", "glost", "glout", "gluon", "gluts", "gnarl", "gnars", "gnats", "goals", "goats", "gonia", "goons", "goral", "gouts", "graal", "grail", "grain", "grana", "grans", "grant", "grins", "griot", "grist", "grits", "groan", "groat", "groin", "grots", "grout", "grunt", "guaco", "guano", "guans", "guars", "guilt", "guiro", "gular", "gusto", "gutta", "icons", "ictus", "igloo", "iglus", "incog", "incur", "incus", "ingot", "intro", "inurn", "iotas", "irons", "laari", "lagan", "laics", "lairs", "lanai", "largo", "laris", "lauan", "laura", "liana", "liang", "liars", "ligan", "linac", "linga", "lingo", "lings", "linns", "linos", "lints", "lions", "liras", "lirot", "litas", "loans", "locos", "locus", "logan", "logia", "logic", "logoi", "logos", "loins", "longs", "loons", "loots", "loran", "loris", "lotas", "lotic", "lotos", "lotto", "lotus", "louis", "lours", "louts", "lunar", "lunas", "lungi", "lungs", "lunts", "naans", "nails", "naira", "nanas", "narco", "narcs", "naric", "naris", "nasal", "natal", "nicol", "niton", "nitro", "noils", "noirs", "nolos", "nonas", "noons", "noria", "noris", "notal", "nouns", "nurls", "octal", "octan", "oculi", "olios", "onion", "ontic", "orals", "orang", "orcas", "orcin", "organ", "orgic", "ornis", "ostia", "ottar", "ottos", "outgo", "racon", "ragas", "ragis", "raias", "rails", "rains", "ranis", "rants", "ratal", "ratan", "ratio", "ratos", "rials", "riant", "riata", "rings", "riots", "roans", "roast", "roils", "roost", "roots", "rosin", "rotas", "rotis", "rotls", "rotos", "roust", "routs", "ruana", "rugal", "ruing", "ruins", "rungs", "runic", "runts", "rutin", "sacra", "saiga", "saint", "salic", "salon", "sanga", "santo", "saran", "sarin", "satin", "sault", "sauna", "scant", "scart", "scatt", "scaur", "scion", "scoot", "scorn", "scour", "scout", "scrag", "scuta", "sitar", "slain", "slang", "slant", "sling", "slung", "snail", "snarl", "snool", "snoot", "snort", "snout", "solan", "solar", "solon", "sonar", "sonic", "sorgo", "sotol", "staig", "stain", "stair", "stang", "start", "stilt", "sting", "stint", "stoai", "stoat", "stoic", "stool", "stour", "stout", "stria", "strut", "stung", "stunt", "sturt", "sugar", "suing", "suint", "sulci", "sunna", "sural", "sutra", "sutta", "tacit", "tacos", "tacts", "taiga", "tails", "taint", "talar", "talas", "talcs", "talon", "talus", "tango", "tangs", "tanto", "tarns", "taroc", "taros", "tarot", "tarsi", "tarts", "tatar", "taunt", "tauts", "tiara", "tical", "tigon", "tilts", "tinct", "tings", "tints", "tirls", "tiros", "titan", "toast", "togas", "toils", "toits", "tolan", "tolas", "tolus", "tonal", "tonga", "tongs", "tonic", "tonus", "tools", "toons", "toots", "toras", "torcs", "toric", "toros", "torot", "torsi", "torso", "torts", "torus", "total", "tours", "touts", "tract", "tragi", "trail", "train", "trait", "trans", "triac", "trial", "trigo", "trigs", "triol", "trios", "trois", "trona", "trots", "trout", "trug", "trust", "tunas", "tungs", "tunic", "turns", "tutor", "ulans", "ulnar", "ulnas", "ultra", "unais", "uncia", "uncos", "ungot", "union", "units", "unlit", "unrig", "until", "urial", "using", "asian", "latin",
+  "acarus", "acinar", "acinus", "acorns", "acting", "actins", "action", "actors", "actual", "agaric", "agnail", "agonal", "agonic", "agoras", "agorot", "agouti", "agrias", "alanin", "alants", "algins", "algors", "aligns", "alnico", "aloins", "altars", "analog", "anatto", "angina", "angora", "anions", "annals", "annual", "annuli", "annuls", "anoint", "antiar", "antics", "anting", "antral", "anural", "anuran", "anuria", "anuric", "aorist", "aortal", "aortas", "aortic", "arcing", "argali", "argals", "argils", "argols", "argons", "argots", "arioso", "arista", "aristo", "arnica", "aroint", "arsino", "artist", "aslant", "astral", "atonal", "atonic", "atrial", "attain", "attars", "attics", "attorn", "aurist", "cairns", "canals", "caning", "cannas", "cannot", "canola", "canons", "canton", "cantor", "cantos", "cantus", "canula", "carats", "cargos", "carina", "caring", "carlin", "carnal", "caroli", "carols", "carton", "casing", "casino", "casita", "castor", "casual", "catalo", "catgut", "cation", "catlin", "caulis", "causal", "cigars", "citola", "citral", "citron", "citrus", "clangs", "claros", "clings", "clonus", "cloots", "clours", "clouts", "cluing", "coalas", "coatis", "cogito", "cogons", "coigns", "coitus", "colins", "cologs", "coloni", "colons", "colors", "colour", "colugo", "congas", "congos", "congou", "coning", "conins", "consol", "consul", "contos", "contra", "cooing", "corals", "corgis", "coring", "cornua", "cornus", "corona", "cortin", "cosign", "costal", "costar", "cotans", "coting", "cottar", "cottas", "cotton", "cougar", "coulis", "counts", "courts", "cousin", "craals", "crania", "craton", "crista", "croons", "croton", "curial", "curing", "curios", "curtal", "cutins", "cutlas", "gainst", "galiot", "galoot", "garcon", "garlic", "gascon", "gaslit", "gators", "gaults", "giants", "giaour", "girons", "gitano", "glacis", "glairs", "glints", "gloats", "gloria", "glouts", "glucan", "gluons", "gnarls", "goanna", "gonion", "gooral", "gorals", "graals", "grails", "grains", "grants", "gratin", "gratis", "griots", "grison", "groans", "groats", "groins", "grotto", "grouts", "grunts", "guacos", "guaiac", "guanin", "guanos", "guilts", "guiros", "guitar", "igloos", "iguana", "incant", "incogs", "incult", "incurs", "ingots", "insoul", "instal", "instar", "insult", "intact", "intort", "intron", "intros", "inturn", "inurns", "isogon", "isolog", "lacing", "lacuna", "lagans", "lagoon", "laguna", "lanais", "langur", "lanugo", "largos", "lariat", "lascar", "lasing", "latigo", "latino", "latria", "lattin", "lauans", "lauras", "lianas", "liangs", "lictor", "ligans", "linacs", "lingas", "lingua", "locust", "logans", "logics", "logion", "longan", "looing", "lorans", "lorica", "losing", "lotion", "lottos", "lunars", "lungan", "lungis", "luring", "lustra", "luting", "lutist", "narcos", "narial", "nasial", "nasion", "nastic", "natant", "nation", "natron", "nicols", "nilgau", "nitons", "nitros", "nonart", "norias", "nosing", "nostoc", "noting", "notion", "nougat", "nounal", "nuncio", "nutant", "nutria", "oaring", "octans", "octant", "octroi", "ocular", "oilcan", "onagri", "onions", "oorali", "orangs", "orcins", "organa", "organs", "orgiac", "origan", "orison", "oscula", "ottars", "ourang", "outact", "outgas", "outing", "outran", "outsat", "outsin", "outsit", "racial", "racing", "racist", "racons", "racoon", "raglan", "ragout", "ranula", "rascal", "rasing", "ratals", "ratans", "rating", "ration", "ratios", "ratlin", "ratoon", "rattan", "ratton", "rialto", "riatas", "rictal", "rictus", "ritual", "ronion", "rosing", "rotgut", "ruanas", "rugola", "rugosa", "ruling", "rustic", "rutins", "sacral", "sailor", "salina", "saloon", "sancta", "sangar", "saning", "santir", "santol", "santur", "sarong", "satang", "sating", "satori", "scalar", "scoria", "scotia", "scrota", "signal", "signor", "slogan", "sluing", "social", "solano", "soling", "solion", "sonant", "sonata", "soring", "souari", "soucar", "stalag", "statal", "static", "stator", "stingo", "stolon", "strain", "strait", "strang", "strata", "strati", "strict", "string", "strong", "strung", "strunt", "suitor", "sultan", "sunlit", "suntan", "taigas", "tailor", "taints", "talars", "talion", "talons", "tangos", "tanist", "tannic", "taring", "tarnal", "tarocs", "tarots", "tarsal", "tarsia", "tartan", "tatars", "taunts", "tautog", "tiaras", "ticals", "tiglon", "tigons", "tincal", "tincts", "titans", "tocsin", "tolans", "toling", "toluic", "tongas", "tonics", "toning", "tonsil", "torous", "torula", "totals", "toting", "toucan", "tracts", "tragic", "tragus", "trails", "trains", "traits", "triacs", "trials", "tricot", "trigon", "trigos", "trinal", "triols", "triton", "trogon", "tronas", "trouts", "truant", "truing", "tunica", "tunics", "tuning", "turaco", "tutors", "ultras", "uncial", "unclog", "uncoil", "uncool", "ungirt", "unions", "unison", "unnail", "unrigs", "unroot", "untorn", "uracil", "urania", "uranic", "uratic", "urials", "urinal",
+  "acinous", "acrasin", "actinal", "actings", "actinon", "actions", "against", "agarics", "agitato", "agnails", "agnatic", "agnosia", "agonist", "agoutis", "alanins", "alastor", "alation", "altoist", "analogs", "anattos", "anconal", "anginal", "anginas", "angoras", "angular", "annatto", "annuals", "annular", "anoints", "antiars", "anticar", "antigun", "antilog", "antings", "antisag", "antlion", "anurans", "anurias", "argalis", "argotic", "arnatto", "arnicas", "arnotto", "aroints", "arousal", "artisan", "arugola", "asocial", "astatic", "astrict", "atonics", "atoning", "attains", "attorns", "auction", "austral", "autoing", "cannoli", "cannula", "cantina", "canting", "cantons", "cantors", "canulas", "carinal", "carinas", "carious", "caritas", "carling", "carlins", "carolus", "carotin", "carting", "cartons", "cartoon", "casting", "catalog", "catalos", "catguts", "cations", "catling", "catlins", "cattail", "cattalo", "catting", "causing", "caution", "cingula", "cistron", "citator", "citolas", "citrals", "citrons", "citrous", "clangor", "clarion", "cloning", "closing", "coagula", "coaling", "coastal", "coating", "cogitos", "colonus", "colours", "colugos", "conatus", "congius", "congous", "consign", "consort", "consult", "contain", "contort", "contour", "contras", "control", "coolant", "cooling", "coranto", "corning", "cornual", "cornuto", "coronal", "coronas", "cortins", "costing", "cottars", "cottons", "cougars", "couloir", "courant", "courlan", "cranial", "craning", "crannog", "crating", "cratons", "crotons", "crouton", "crustal", "cultist", "curiosa", "curling", "cursing", "curtail", "curtain", "curtals", "cutting", "galiots", "galoots", "garcons", "garlics", "gastral", "gastric", "gastrin", "giaours", "girasol", "girosol", "gitanos", "glonoin", "glorias", "glottic", "glottis", "glucans", "glutton", "gnostic", "goannas", "goorals", "granita", "granola", "gratins", "grottos", "grunion", "guaiacs", "guanaco", "guanins", "guarani", "guitars", "iguanas", "incants", "incrust", "inocula", "instant", "insular", "intorts", "intrant", "introns", "intrust", "inturns", "lacings", "lacunar", "lacunas", "lagoons", "lagunas", "lancing", "languor", "langurs", "lanugos", "lariats", "lasting", "latigos", "latinos", "latrias", "lattins", "lictors", "linocut", "linsang", "linuron", "loaning", "locator", "locoing", "locusta", "logania", "logions", "longans", "loosing", "looting", "lorgnon", "lotions", "lotting", "louring", "lousing", "louting", "lunatic", "lungans", "lunting", "lusting", "lutings", "narcist", "nations", "natrons", "natural", "nilgaus", "nitroso", "nitrous", "nocturn", "nonarts", "noncola", "nonsuit", "noosing", "nostril", "notions", "nougats", "nuncios", "nurling", "nursing", "nutrias", "nutting", "ocarina", "octagon", "octanol", "octants", "octrois", "oculars", "oculist", "oilcans", "ologist", "onanist", "ooralis", "oralist", "orating", "oration", "orcinol", "organic", "organon", "origans", "ortolan", "oscular", "ostraca", "otalgia", "otalgic", "ourangs", "ousting", "outacts", "outcast", "outgain", "outgrin", "outings", "outlain", "outlast", "outrang", "outring", "outsail", "outsang", "outsing", "outsoar", "racings", "racoons", "raglans", "ragouts", "rainout", "ranting", "ranulas", "ratings", "rations", "ratlins", "ratoons", "rattail", "rattans", "ratting", "rattons", "rattoon", "rialtos", "ricotta", "riotous", "risotto", "rituals", "ronions", "roosing", "rooting", "rosinol", "rotguts", "rotting", "rousing", "routing", "ruction", "rugolas", "rulings", "rusting", "rutting", "sacaton", "sacring", "saguaro", "saltant", "salting", "sangria", "santour", "satanic", "saucing", "saurian", "sautoir", "scaling", "scaring", "scoring", "scrotal", "signora", "slating", "snaring", "snoring", "soaring", "solanin", "solaria", "solatia", "soliton", "soloing", "sooting", "sorning", "sorting", "souring", "staling", "staning", "stannic", "staring", "starlit", "stating", "station", "stoical", "stoning", "storing", "stratal", "suction", "sultana", "surcoat", "taction", "tactual", "tailors", "talcing", "talcous", "talions", "tantras", "tantric", "tartans", "tarting", "tasting", "tauting", "tautogs", "tiglons", "tincals", "titular", "tooling", "tooting", "torsion", "tortoni", "torulas", "toucans", "touraco", "touring", "tourist", "tousing", "touting", "tracing", "tragics", "transit", "tricots", "trigons", "tritons", "trogons", "troilus", "truants", "trucing", "tsarina", "turacos", "turista", "turning", "uncials", "uncinal", "unclogs", "uncoils", "unction", "unicorn", "unnails", "unroots", "unsling", "unsnarl", "uracils", "uranias", "urinals",
+  "actinons", "actuator", "agitator", "agnation", "agnostic", "alations", "altruist", "analogic", "anginous", "annalist", "annattos", "antalgic", "anticult", "antilogs", "antirust", "antlions", "argonaut", "arnattos", "arnottos", "arousing", "arugolas", "attuning", "auctions", "autocrat", "autogiro", "calutron", "canaling", "cannular", "cannulas", "canonist", "canorous", "cantinas", "cantonal", "carlings", "caroling", "carotins", "carousal", "cartoons", "castling", "castrati", "castrato", "catalogs", "catlings", "cattails", "cattalos", "cautions", "cilantro", "cislunar", "citators", "clangors", "clangour", "clarions", "claustra", "clonings", "clotting", "clouring", "clouting", "coasting", "coatings", "coattail", "colonist", "colorant", "coloring", "colorist", "conation", "congrats", "constant", "consular", "contagia", "contains", "continua", "continuo", "contorts", "contours", "contrail", "contrast", "controls", "coolants", "corantos", "cornutos", "coronals", "cortisol", "couloirs", "countian", "counting", "couranto", "courants", "courlans", "coursing", "courting", "craaling", "crannogs", "crooning", "croutons", "crusting", "curating", "curlings", "curtails", "curtains", "cuttings", "cuttling", "gastrula", "glonoins", "glorious", "gluttons", "goitrous", "gracioso", "gracious", "granitas", "granolas", "grunions", "guaiacol", "guanacos", "guaranis", "ignorant", "instruct", "insulant", "insurant", "intrants", "isogonal", "isolator", "lacunars", "languors", "linocuts", "linurons", "loanings", "locating", "location", "locators", "locution", "lorgnons", "lunarian", "lunatics", "lunation", "lustring", "lutanist", "natation", "national", "naturals", "naturist", "nautical", "nocturns", "nonactor", "nonguilt", "nonsolar", "nonsugar", "notarial", "notating", "notation", "notional", "notornis", "notturni", "notturno", "nursling", "nutating", "nutation", "nuttings", "ocarinas", "octagons", "octanols", "octantal", "orations", "orcinols", "organics", "organist", "organons", "orgastic", "orinasal", "ortolans", "oscitant", "osculant", "ostinato", "ostiolar", "ostracon", "otalgias", "outgains", "outgrins", "outrings", "outscorn", "raincoat", "rainouts", "rational", "rattails", "rattling", "rattoons", "ricottas", "roasting", "rogation", "roosting", "rotating", "rotation", "rousting", "ructions", "rustical", "rustling", "rutilant", "sagittal", "saluting", "sanction", "santalic", "saturant", "scanting", "scarting", "scatting", "scooting", "scorning", "scouring", "scouting", "singular", "slanting", "slatting", "slotting", "snarling", "snooling", "snooting", "snorting", "snouting", "solacing", "solating", "solation", "solution", "sonantal", "sonantic", "sonatina", "sonorant", "sourcing", "stagnant", "starling", "starting", "statical", "stolonic", "stooling", "strontia", "strontic", "stunting", "sultanic", "surgical", "taciturn", "tactions", "tailcoat", "tantalic", "tantalus", "taunting", "titanous", "titulars", "toasting", "tonsilar", "toolings", "tootling", "tortious", "tortonis", "totaling", "touracos", "tourings", "tousling", "tracings", "traction", "tragical", "trancing", "transact", "trigonal", "trusting", "tungstic", "turncoat", "turnings", "turtling", "tutorial", "tutoring", "ultraist", "uncaring", "uncasing", "unctions", "unicolor", "unicorns", "unisonal", "unlacing", "unsocial", "unstring", "urologic", "urticant",
+  "actuating", "actuation", "actuators", "agitators", "agnations", "analogist", "analogous", "annotator", "antalgics", "antisolar", "argonauts", "ascogonia", "astronaut", "atonalist", "atrocious", "attorning", "auctorial", "autocrats", "autogiros", "calutrons", "cantorial", "carnation", "carousing", "cartoning", "causation", "cilantros", "clangours", "closuring", "cloturing", "coagulant", "coattails", "cognation", "colorants", "colorings", "colouring", "conations", "consignor", "consoling", "consortia", "constrain", "consultor", "contagion", "continual", "continuos", "contrails", "contralto", "contusing", "contusion", "cottoning", "countians", "courantos", "guaiacols", "guncotton", "gustation", "inoculant", "insulator", "lactating", "lactation", "locations", "locutions", "longicorn", "lunarians", "lunations", "natations", "national", "nocturnal", "nonactors", "nonartist", "noncasual", "noncausal", "noncoital", "nonguilts", "nonracial", "nonsocial", "nostalgia", "nostalgic", "notations", "nutations", "octagonal", "ocularist", "orangutan", "outacting", "outracing", "outrating", "raincoats", "rational", "ratooning", "rattlings", "rogations", "rotations", "saltation", "santolina", "scantling", "scuttling", "startling", "stational", "strunting", "suctional", "suctorial", "suctorian", "sugarcoat", "tailcoats", "tarnation", "tonsorial", "tonsuring", "torsional", "tractions", "transonic", "trouncing", "truanting", "turncoats", "turtlings", "tutorials", "unclosing", "uncoating", "uncrating", "unloosing", "unrooting", "unstating", "urologist", "urticants",
+  "actuations", "alacritous", "angulation", "annotators", "antagonist", "canulating", "carnations", "cartooning", "cartoonist", "castigator", "castrating", "castration", "clangorous", "coagulants", "cognations", "connatural", "consorting", "constraint", "construing", "consultant", "consulting", "contagions", "contagious", "contorting", "contouring", "contraltos", "coronating", "corotating", "guncottons", "inoculants", "inoculator", "lactations", "langostino", "longicorns", "lustrating", "lustration", "naturalist", "notational", "nutational", "orangutans", "osculating", "osculation", "outlasting", "outscoring", "outsnoring", "outsoaring", "outstaring", "rattooning", "rotational", "salutation", "saturating", "saturation", "stagnation", "tarnations", "tractional", "truncating", "truncation", "ultrasonic",
+  "angulations", "astronautic", "cartoonings", "coagulation", "continuator", "contrasting", "granulation", "gratulation", "inoculators", "nonsurgical", "outscorning", "transacting", "transaction", "translating", "translation", "truncations", "unstartling",
+  "coagulations", "consultation", "continuators", "gastrulation", "granulations", "gratulations", "strangulation", "translocating", "translocation",
+  "congratulation", "congratulations"
+];
+
+function isRealWord(word) {
+  return dictionary.includes(word);
+}
+
+/* ========== GAME LOGIC ========== */
+let used = new Set();
+
+function addWord() {
+  let input = document.getElementById("wordInput");
+  let word = input.value.toLowerCase().trim();
+
+  if (word.length < 3) {
+    alert("Minimum 3 letters!");
+    return;
+  }
+
+  if (!isValidLetters(word)) {
+    alert("Invalid letters!");
+    input.value = "";
+    return;
+  }
+
+  if (!isRealWord(word)) {
+    alert("Not in dictionary!");
+    input.value = "";
+    return;
+  }
+
+  if (used.has(word)) {
+    alert("Already used!");
+    return;
+  }
+
+  used.add(word);
+
+  let li = document.createElement("li");
+  li.textContent = word;
+  document.getElementById("list").appendChild(li);
+
+  input.value = "";
+}
+
+document.getElementById("wordInput").addEventListener("keypress", e => {
+  if (e.key === "Enter") addWord();
+});
+</script>
+
+</body>
+</html>
